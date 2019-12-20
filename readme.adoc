@@ -1,0 +1,64 @@
+= Date to day number conversion and vice-versa
+
+There are several day numbering conventions commonly used in computing and science:
+
+* Julian Day Number
+* Unix day number - the number of days since 1 January 1970
+* Excel day number (also called the OLE Automation day number or _OADate_). The number of days since
+30th December 1899.
+
+We will use the last of these conventions to show how to change between a date and a day number. A
+day number is occasionally called a serial date.
+
+== Showing the Excel day number
+
+* In Excel we can simply enter a date and change the format to number in order to see the day number.
+* In Powershell: +
+----
+(Get-Date).ToOADate()
+----
+* In C#: +
+----
+Console.WriteLine(DateTime.Today.ToOADate());
+----
+
+== The problem (and solution!)
+
+Dates are normally specified as a year, month and day - so how to we convert this to a serial number?
+
+Let's start by choosing an false starting point for the year of the 1st March. This is so that the leap day
+which is inserted at the end of February in a leap year is the last day of our "false" year. We also
+number months starting at zero - not one. 
+
+We note that in order to calculate the day number of the first of the month, we could use a lookup table
+as follows:
+
+----
+int[] monthDays = { 0, 31, 61, 92, 122, 153, 184, 214, 245, 275, 306, 337 };
+----
+
+So the first day of February in our *false* year is day 337 (the first day of March is, of course, day zero).
+
+It turns out that, long ago, someone turned this series into a set of points ( (0, 0), (1, 31), (2, 61) etc. ) and
+found that the day number *n* is related to the false month number *m* by the following equation:
+
+----
+n = 30.6013986m + 0.0256410
+----
+
+This produces the sequence of real numbers as follows:
+
+|===
+| 0 |0.0256410256410504 | 0  
+| 1 |30.6270396270397   | 30
+| 2 |61.2284382284383   | 61
+| 3 |91.8298368298369   | 92
+| 4 |122.431235431235   | 122
+| 5 |153.032634032634   | 153
+| 6 |183.634032634033   | 184
+| 7 |214.235431235431   | 214
+| 8 |244.83682983683    | 245
+| 9 |275.438228438228   | 275
+| 10 |306.039627039627  | 306
+| 11 | 336.641025641026 | 337
+|===
