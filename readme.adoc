@@ -33,6 +33,7 @@ number months starting at zero - not one.
 We note that in order to calculate the day number of the first of the month, we could use a lookup table
 as follows:
 
+[source,c#]
 ----
 int[] monthDays = { 0, 31, 61, 92, 122, 153, 184, 214, 245, 275, 306, 337 };
 ----
@@ -42,6 +43,7 @@ So the first day of February in our *false* year is day 337 (the first day of Ma
 It turns out that, long ago, someone turned this series into a set of points ( (0, 0), (1, 31), (2, 61) etc. ) and
 found that the day number *n* is related to the false month number *m* by the following equation:
 
+[source,c#]
 ----
 n = 30.6013986m + 0.0256410
 ----
@@ -71,6 +73,7 @@ This formula is due to Van Flandern.
 Consider a calendar with no leap years - the number of days from year zero until the 1st January on year x is given
 by 
 
+[source,c#]
 ----
 365 * x
 ----
@@ -79,6 +82,7 @@ If, for the time being, we consider the case where leap years occur every four y
 year rules), we can find after some experimentation that the number of days from 1st January year zero until
 the 1st January year y is given by:
 
+[source,c#]
 ----
 367 * y - (7 * y / 4) 
 ----
@@ -106,6 +110,7 @@ we need to add two extra days since Saturday and Sunday do not count as business
 It turns out that OADates (Excel dates) are "_Saturday-based_". This means that the epoch of 30 Dec 1899 is
 a Saturday - thus if we have a C# `DateTime` and do the following:
 
+[source,c#]
 ----
 var date = DateTime.Today;
 var day = (int)date.ToOADate() % 7;
@@ -115,6 +120,7 @@ var day = (int)date.ToOADate() % 7;
 
 So we can tell if a DateTime represents a weekend day by the following test:
 
+[source,c#]
 ----
 if ((int)date.ToOADate() % 7 < 2)
 {
@@ -129,24 +135,70 @@ we will first add the correct number of full weeks:
 ----
 static int AddBusinessDays(int startDate, int n)
 {
-	var newDate = startDate + n / 5 * 7;
+    var newDate = startDate + n / 5 * 7;
 
-	return newDate;
+    return newDate;
 }
 ----
 
 Next, we need to add the remainder, but we need to add two more days if going past or landing on a weekend
 (or subtract two more days if N is negative and we go backwards past or land on a weekend).
 
-We can form a the following table - the starting day is in the first column:
+We can form a the following table - the starting day is in the first column and the number of days
+to add are in the top row.
 
 [cols="^s,^,^,^,^,^,^,^,^,^"]
 |===
 | 9+^| *Days to add*
 s|Start day s| -4 s| -3 s| -2 s| -1 s| 0 s| 1 s| 2 s| 3 s| 4 
-| 2 | -2 | -1 | 0 | 1 | 2 | 3 | 4 | 5 | 6
-| 3 | -1 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
-| 4 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8  
-| 5 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 
-| 6 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10  
+| 2 (Monday) | -2 | -1 | 0 | 1 | 2 | 3 | 4 | 5 | 6
+| 3 (Tuesday) | -1 | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7
+| 4 (Wednesday) | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8  
+| 5 (Thursday) | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 
+| 6 (Friday) | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10  
 |===
+
+The results are shown in the main body of the table - we can see which results are below 2 - this indicates
+we need to *subtract* two more days to compensate for a weekend when N is negative. We can also see which 
+values are greater than 7 indicating that we need to *add* two more days to compensate for a weekend when
+N is positive.
+
+We can do this by taking the startday
+
+[source,c#]
+----
+static int AddBusinessDays(int startDate, int n)
+{
+    var newDate = startDate + n / 5 * 7;
+
+    int originalDay = startDate % 7; // 0-6 with 0 meaning Saturday
+    int remainder = n % 5;
+    int newDay = originalDay + remainder;
+    int correction = (newDay < 2) ? -2 : (newday > 6 ? 2 : 0); // weekend correction
+    return newDate;
+}
+----
+
+We can also note that for d in the range -4 to +10, the function `f(x) => 2 * ((x + 3) / 5 - 1)` using integer
+divisision generates the sequence `-2, -2, -2, -2, -2, -2, 0, 0, 0, 0, 0, 2, 2, 2, 2` so we can replace
+our nested ternary operator as follows:
+
+[source,c#]
+----
+static int AddBusinessDays(int startDate, int n)
+{
+	// split number of days into full business weeks and a remainder. Adding or subtracting a multiple of five business days
+	// will always land us on the same day, so for every five business days we add a whole week (7 days):
+	var remainder = n % 5;
+	int originalDay = startDate % 7;
+
+	int newDay = originalDay + remainder;
+
+	// factor to correct for weekends when adding remainder:
+	var correction = 2 * ((newDay + 3) / 5 - 1);
+
+	var newDate = startDate + n / 5 * 7 + remainder + correction;
+
+	return newDate;
+}
+----
