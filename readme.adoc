@@ -124,7 +124,7 @@ So we can tell if a DateTime represents a weekend day by the following test:
 ----
 if ((int)date.ToOADate() % 7 < 2)
 {
-	Console.WriteLine("It's the weekend!");
+    Console.WriteLine("It's the weekend!");
 }
 ---- 
 
@@ -187,20 +187,20 @@ our nested ternary operator as follows:
 ----
 static int AddBusinessDays(int startDate, int n)
 {
-	// split number of days into full business weeks and a remainder. Adding or subtracting a
-	// multiple of five business days will always land us on the same day, so
-	// for every five business days we add a whole week (7 days):
-	var remainder = n % 5;
-	int originalDay = startDate % 7;
+    // split number of days into full business weeks and a remainder. Adding or subtracting a
+    // multiple of five business days will always land us on the same day, so
+    // for every five business days we add a whole week (7 days):
+    var remainder = n % 5;
+    int originalDay = startDate % 7;
 
-	int newDay = originalDay + remainder;
+    int newDay = originalDay + remainder;
 
-	// factor to correct for weekends when adding remainder:
-	var correction = 2 * ((newDay + 3) / 5 - 1);
+    // factor to correct for weekends when adding remainder:
+    var correction = 2 * ((newDay + 3) / 5 - 1);
 
-	var newDate = startDate + n / 5 * 7 + remainder + correction;
+    var newDate = startDate + n / 5 * 7 + remainder + correction;
 
-	return newDate;
+    return newDate;
 }
 ----
 
@@ -213,6 +213,6 @@ is Saturday or Sunday:
 ----
 if (startDate % 7 < 2)
 {
-	throw new ArgumentException($"the supplied start date {startDate} is Saturday or Sunday");
+    throw new ArgumentException($"the supplied start date {startDate} is Saturday or Sunday");
 }
 ----
