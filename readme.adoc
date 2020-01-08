@@ -187,8 +187,9 @@ our nested ternary operator as follows:
 ----
 static int AddBusinessDays(int startDate, int n)
 {
-	// split number of days into full business weeks and a remainder. Adding or subtracting a multiple of five business days
-	// will always land us on the same day, so for every five business days we add a whole week (7 days):
+	// split number of days into full business weeks and a remainder. Adding or subtracting a
+	// multiple of five business days will always land us on the same day, so
+	// for every five business days we add a whole week (7 days):
 	var remainder = n % 5;
 	int originalDay = startDate % 7;
 
@@ -200,5 +201,18 @@ static int AddBusinessDays(int startDate, int n)
 	var newDate = startDate + n / 5 * 7 + remainder + correction;
 
 	return newDate;
+}
+----
+
+Note that, we do not consider the case where the *starting date* is on Saturday or Sunday since it is not 
+clear what we should do in this case. The business rules of the application should determine this behaviour:
+it may be enough (or even actually be desirable) in some cases to throw an exception if the starting date
+is Saturday or Sunday:
+
+[source,c#]
+----
+if (startDate % 7 < 2)
+{
+	throw new ArgumentException($"the supplied start date {startDate} is Saturday or Sunday");
 }
 ----
