@@ -219,6 +219,9 @@ if (startDate % 7 < 2)
 
 == Business days between two dates
 
+We note that the function the function `f(x) => x / 7 + x / 8` using integer division generates the
+sequence `0, 0, 0, 0, 0, 0, 0, 1, 2, 2, 2, 2, 2` for x in the range 0 to 12.
+
 [source,c#]
 ----
 static int GetNumberOfBusinessDaysInRange(int oaDate1, int oaDate2)
