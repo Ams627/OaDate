@@ -216,3 +216,30 @@ if (startDate % 7 < 2)
     throw new ArgumentException($"the supplied start date {startDate} is Saturday or Sunday");
 }
 ----
+
+== Business days between two dates
+
+[source,c#]
+----
+static int GetNumberOfBusinessDaysInRange(int oaDate1, int oaDate2)
+{
+    var day1 = oaDate1 % 7;
+    if (day1 < 2)
+    {
+        oaDate1 += 2 - day1;
+    }
+
+    var day2 = oaDate2 % 7;
+    if (day2 < 2)
+    {
+        oaDate2 -= day2;
+    }
+
+    var days = (oaDate2 - oaDate1) / 7 * 5;
+    var remainder = (oaDate2 - oaDate1) % 7;
+    var correction = (day1 + remainder) / 7 + (day1 + remainder) / 8;
+
+    days += remainder - correction;
+    return days;
+}
+----
