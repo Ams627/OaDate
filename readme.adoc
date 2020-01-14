@@ -2,13 +2,16 @@
 
 There are several day numbering conventions commonly used in computing and science:
 
-* Julian Day Number
-* Unix day number - the number of days since 1 January 1970
+* Julian Day Number - used in astronomy. The number of days since 4713 BC in the
+https://en.wikipedia.org/wiki/Proleptic_Julian_calendar[proleptic Julian calendar]
 * Excel day number (also called the OLE Automation day number or _OADate_). The number of days since
 30th December 1899.
+* Unix day number - the number of days since 1 January 1970
+* In C#, F# or Powershell, we can also use the day number derived from `DateTime` by obtaining the `Ticks`
+property and dividing by 86400 then by 10,000,000.
 
-We will use the last of these conventions to show how to change between a date and a day number. A
-day number is occasionally called a serial date.
+We will use the Excel day number to show how to change between a date and a day number. A
+day number is occasionally called a _serial date_.
 
 == Showing the Excel day number
 
@@ -70,13 +73,60 @@ This produces the sequence of real numbers as follows:
 
 This formula is due to Van Flandern.
 
-Consider a calendar with no leap years - the number of days from year zero until the 1st January on year x is given
-by 
+Consider a calendar with no leap years but starting at year 1 (there was no year zero AD) - the number of
+days from year zero until the 1st January on year y is given by 
 
 [source,c#]
 ----
-365 * x
+365 * y - 365
 ----
+
+We can see this as the days in the _number of completed years_ prior to the date under consideration.
+
+Let's introduce a leap year every four years - then our formula becomes:
+
+[source,c#]
+----
+365 * y - 365 + (y - 1) / 4
+----
+
+This is a reasonable approximation for many practical cases since the next year which is an exception to the
+rule "_a leap year is any year divisible by 4_" is 2100. 
+
+We then need to add the component of the date due to the number of completed months. We could use a lookup table
+for this:
+
+[source,c#]
+----
+int[] c = {0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334};
+var result = 365 * y + (y - 1) / 4 - 365 + c[m]+ d;
+----
+
+However, we still have to adjust for February in a leap year.
+
+It turns out that in the 1960s, someone noticed that the expression `275 * m / 9 - 30` when using integer 
+division gives *almost* the right number of days in completed months. For m after February, the 
+number of days is out by +2 in a normal year and +1 in a leap year. Thus we need an adjustment factor
+which is -1 in a leap year or -2 in a normal year. We can use a bit-fiddling technique to achieve this:
+
+[source,c#]
+----
+var adjustment = (1 << (y & 3) & 1) - 2;
+----
+
+We also need an expression which is 1 if the month is January or February, but zero otherwise. A suitable
+expression is (m + 9) / 12
+
+Thus a complete adjustment is 
+
+[source,c#]
+----
+var adjustment = ((1 << (y & 3) & 1) - 2) * (m + 9) / 12;
+----
+
+Van Flandern spotted in 1967 that if we choose 367 as the initial multiplier for y instead of 365, then 
+we need to subtract 2 days for each normal year completed and 1 day for each leap year completed.
+
 
 If, for the time being, we consider the case where leap years occur every four years (ignoring the 100 and 400
 year rules), we can find after some experimentation that the number of days from 1st January year zero until
@@ -180,7 +230,7 @@ static int AddBusinessDays(int startDate, int n)
 ----
 
 We can also note that for d in the range -4 to +10, the function `f(x) => 2 * ((x + 3) / 5 - 1)` using integer
-divisision generates the sequence `-2, -2, -2, -2, -2, -2, 0, 0, 0, 0, 0, 2, 2, 2, 2` so we can replace
+division generates the sequence `-2, -2, -2, -2, -2, -2, 0, 0, 0, 0, 0, 2, 2, 2, 2` so we can replace
 our nested ternary operator as follows:
 
 [source,c#]
@@ -326,3 +376,17 @@ public enum DayOfWeek
 }
 
 ----
+
+== Days in a arbitrary month
+
+== Move a date to the first or last of the month
+
+== First or Last Monday in May
+
+== Week number (ISO 8601)
+
+ISO8601 states that weeks start on Monday and proposes a week numbering scheme such that week 1 of any year is the week
+containing the first Thursday.
+
+== Date of Easter
+
