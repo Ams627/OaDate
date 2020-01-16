@@ -386,7 +386,42 @@ public enum DayOfWeek
 == Week number (ISO 8601)
 
 ISO8601 states that weeks start on Monday and proposes a week numbering scheme such that week 1 of any year is the week
-containing the first Thursday.
+containing the first Thursday. Or we can state "the first Thursday of the year is always in week 1".
+
+Consider the year 2018 where the 1st of January is a Monday: the first Thursday is 4th January. Consider an example
+date of Wednesday 21st February 2018. The procedure is as follows:
+
+. Find the Thursday of the week containing Wednesday 21st February - this is Thursday 22nd February.
+. Take the `DayOfYear` property for Thursday 22nd February. This represents the number of days
+since the first Thursday of the year *plus* the remainder between the 1st January and the first Thursday.
+. Remembering that `DayOfYear` starts at one and not zero, we subtract 1 and divide by 7. 
+. The result is a zero based week number, so we add 1 to it to get the ISO week number.
+
+The C# code is as follows:
+
+[source,c#]
+----
+public static int ToIso8601Weeknumber1(this DateTime date)
+{
+	var thursday = date.AddDays(3 - date.Ticks / 86400 / 10_000_000 % 7);
+	return (thursday.DayOfYear - 1) / 7 + 1;
+}
+----
+
+We can, of course, do away with subtracting one and move to Wednesday instead of Thursday:
+
+[source,c#]
+----
+public static int ToIso8601Weeknumber1(this DateTime date)
+{
+	var wednesday = date.AddDays(2 - date.Ticks / 86400 / 10_000_000 % 7);
+	return thursday.DayOfYear / 7 + 1;
+}
+----
+
+
+
+
 
 == Date of Easter
 
