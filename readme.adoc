@@ -415,7 +415,7 @@ We can, of course, do away with subtracting one and move to Wednesday instead of
 public static int ToIso8601Weeknumber1(this DateTime date)
 {
     var wednesday = date.AddDays(2 - date.Ticks / 86400 / 10_000_000 % 7);
-    return thursday.DayOfYear / 7 + 1;
+    return wednesday.DayOfYear / 7 + 1;
 }
 ----
 
