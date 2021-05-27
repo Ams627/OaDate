@@ -24,6 +24,20 @@ day number is occasionally called a _serial date_.
 ----
 Console.WriteLine(DateTime.Today.ToOADate());
 ----
+or in C#, we can also use the `Ticks` property of `DateTime` which represents the number of hundred-nanosecond increments
+since the year zero in the proleptic Gregorian calendar:
+
+Noting that the _base date_ for Excel is 30 January 1899, we can calculate the number of days between this date and the 
+date from which `DateTime` starts (proleptic Gregorian 1st January 0000). This gives us `693593`. So we can calculate the
+Excel date as follows:
+
+----
+private static int GetExcelDate(DateTime date)
+{
+    return (int)(date.Ticks / 10_000_000 / 86400) - 693593;
+}
+----
+
 
 == The problem (and solution!)
 
